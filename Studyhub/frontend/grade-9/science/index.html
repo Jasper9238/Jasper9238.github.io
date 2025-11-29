@@ -103,7 +103,7 @@
             const grade = '9';
             const subject = 'science';
             try {
-                const response = await fetch(`http://127.0.0.1:5000/get_notes?grade=${grade}&subject=${subject}`);
+                const response = await fetch(`https://studyhub-backend-iy1e.onrender.com//get_notes?grade=${grade}&subject=${subject}`);
                 const notes = await response.json();
 
                 const container = document.getElementById('notes-container');
@@ -164,7 +164,7 @@
 
         const data = { grade, subject, title, content, author: "Anonymous" };
 
-        const res = await fetch("http://127.0.0.1:5000/add_note", {
+        const res = await fetch("https://studyhub-backend-iy1e.onrender.com//add_note", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify(data)
