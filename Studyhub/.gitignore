@@ -1,0 +1,18 @@
+serviceAccountKey.json
+# Python virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Environment variables
+.env
+
+# Firebase admin JSON key (if you have one in the repo folder temporarily)
+*.json
+
+venv/
+__pycache__/
+serviceAccountKey.json
+.env
