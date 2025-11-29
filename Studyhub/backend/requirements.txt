@@ -3,3 +3,4 @@ requests==2.32.3
 firebase-admin==7.1.0
 flask==2.3.3
 flask-cors==3.0.0
+gunicorn==22.0.0

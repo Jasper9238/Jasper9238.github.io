@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from notes import add_note, get_notes
+FIREBASE_KEY_PATH='serviceAccountKey.json'
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS so frontend can access API
