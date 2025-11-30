@@ -2,12 +2,32 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grade 9 Science Notes</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
-        .note { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
-        .note-title { font-weight: bold; font-size: 1.2em; }
-        .note-author { font-style: italic; color: #555; }
+        h1, h2 { color: #333; }
+        
+        .note { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            background-color: #f9f9f9;
+        }
+        .note-title { 
+            font-weight: bold; 
+            font-size: 1.3em; 
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+        .note-author { 
+            font-style: italic; 
+            color: #777; 
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            display: block;
+        }
         .post-btn {
             background: #4CAF50;
             color: white;
@@ -17,14 +37,14 @@
             cursor: pointer;
             font-size: 16px;
             margin-bottom: 20px;
-            }
-
-            .post-btn:hover {
+            transition: background 0.3s;
+        }
+        .post-btn:hover {
             background: #45a049;
-            }
+        }
 
-            /* Popup modal */
-            .modal {
+        /* Popup modal */
+        .modal {
             display: none;
             position: fixed;
             top: 0;
@@ -32,52 +52,103 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.6);
+            /* Use flex to center the content */
+            display: flex; 
             align-items: center;
             justify-content: center;
-            }
+            z-index: 1000;
+        }
 
-            .modal-content {
+        .modal-content {
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
-            width: 320px;
-            }
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
 
-            .modal-content input,
-            .modal-content textarea {
+        .modal-content input,
+        .modal-content textarea {
             width: 100%;
-            padding: 8px;
-            margin: 8px 0;
+            padding: 10px;
+            margin: 10px 0;
             border-radius: 6px;
             border: 1px solid #ccc;
-            }
+            box-sizing: border-box;
+        }
+        .modal-content textarea {
+            resize: vertical;
+        }
 
-            .modal-actions {
+        .modal-actions {
             display: flex;
-            justify-content: space-between;
-            }
+            justify-content: flex-end; /* Align buttons to the right */
+            gap: 10px;
+            margin-top: 20px;
+        }
 
-            .submit-btn {
+        .submit-btn {
             background: #2196F3;
             color: white;
-            padding: 8px 14px;
+            padding: 10px 18px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            }
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #1e87e5;
+        }
 
-            .cancel-btn {
+        .cancel-btn {
             background: #777;
             color: white;
-            padding: 8px 14px;
+            padding: 10px 18px;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            }
+            transition: background 0.3s;
+        }
+        .cancel-btn:hover {
+            background: #666;
+        }
+        
+        #login-form input {
+            width: 95%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        #login-form button {
+            padding: 10px 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        #sign-out-btn {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #sign-out-btn:hover {
+            background: #c82333;
+        }
+        
     </style>
 </head>
 <body>
     <h1>Grade 9 Science Notes</h1>
+    
     <div id="auth-ui">
         <p id="auth-status">Loading user status...</p>
         
@@ -91,15 +162,16 @@
         <button id="sign-out-btn" style="display: none;">Sign Out</button>
     </div>
     
+    <hr>
+    
     <button id="postNoteBtn" class="post-btn" style="display: none;">Post Note</button>
 
-    <!-- Hidden popup form -->
-    <div id="noteModal" class="modal">
+    <div id="noteModal" class="modal" style="display: none;"> 
     <div class="modal-content">
         <h2>Post a Note</h2>
 
-        <input id="noteTitle" type="text" placeholder="Title">
-        <textarea id="noteContent" placeholder="Write your note here..."></textarea>
+        <input id="noteTitle" type="text" placeholder="Title" required>
+        <textarea id="noteContent" placeholder="Write your note here..." required></textarea>
 
         <div class="modal-actions">
         <button id="submitNote" class="submit-btn">Submit</button>
@@ -108,29 +180,33 @@
     </div>
     </div>
 
+    <hr>
 
+    <h2>Community Notes</h2>
     <div id="notes-container">Loading notes...</div>
-<script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
 
     <script type="module" src="/js/firebaseAuth.js"></script> 
 
     <script type="module">
-        // Import the necessary functions from your module
+        
+        // This import uses the CORRECT RELATIVE path to access the module 
+        // two levels up (../../) and then into the js folder.
         import { 
             signIn, 
             signUp, 
             userSignOut, 
             subscribeToAuthChanges, 
             getCurrentUserToken 
-        } from './js/firebaseAuth.js'; 
+        } from '../../js/firebaseAuth.js'; 
         
         // --- PAGE-SPECIFIC GLOBAL VARIABLES ---
-        // Get the current grade and subject from the page title or URL
         const GRADE = '9';
         const SUBJECT = 'science';
         let currentUser = null; // Variable to hold the current user object
-
+        
         // --- AUTH UI ELEMENTS ---
         const authStatus = document.getElementById('auth-status');
         const loginForm = document.getElementById('login-form');
@@ -141,13 +217,17 @@
 
         // --- NOTE MODAL UI ELEMENTS ---
         const modal = document.getElementById("noteModal");
-        const closeBtn = document.getElementById("closeModal");
-        const submitBtn = document.getElementById("submitNote");
+        const closeModalBtn = document.getElementById("closeModal");
+        const submitNoteBtn = document.getElementById("submitNote");
+        const noteTitleInput = document.getElementById("noteTitle");
+        const noteContentInput = document.getElementById("noteContent");
+        
+        const notesContainer = document.getElementById('notes-container');
 
 
         // --- A. AUTHENTICATION STATE HANDLER ---
         subscribeToAuthChanges((user) => {
-            currentUser = user; // Store the user object
+            currentUser = user; 
             
             if (user) {
                 // LOGGED IN
@@ -175,10 +255,9 @@
             // Attempt to sign in first
             signIn(email, password)
                 .catch(() => {
-                    // If sign-in fails (user might not exist), attempt to sign up
+                    // If sign-in fails, attempt to sign up
                     return signUp(email, password)
                         .catch(error => {
-                            // If sign-up also fails
                             alert(`Authentication Error: ${error.message}`);
                         });
                 });
@@ -192,21 +271,20 @@
         // --- C. NOTE POSTING LOGIC (UPDATED WITH TOKEN!) ---
 
         postNoteBtn.addEventListener("click", () => {
-            // Check if user is actually logged in before showing the modal
             if (currentUser) {
-                modal.style.display = "flex";
+                modal.style.display = "flex"; // Show modal
             } else {
                 alert("You must be signed in to post a note.");
             }
         });
 
-        closeBtn.addEventListener("click", () => {
+        closeModalBtn.addEventListener("click", () => {
             modal.style.display = "none";
         });
 
-        submitBtn.addEventListener("click", async () => {
-            const title = document.getElementById("noteTitle").value;
-            const content = document.getElementById("noteContent").value;
+        submitNoteBtn.addEventListener("click", async () => {
+            const title = noteTitleInput.value;
+            const content = noteContentInput.value;
 
             if (!title || !content) {
                 alert("Please fill in both fields.");
@@ -226,25 +304,24 @@
                 subject: SUBJECT, 
                 title, 
                 content,
-                // NOTE: We no longer send the 'author' field from the frontend.
-                // The backend securely adds the authorId from the verified token.
             };
 
+            // NOTE: Check your backend route. Assuming /add_note is the correct endpoint.
             const res = await fetch("https://studyhub-backend-iy1e.onrender.com/add_note", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${idToken}` // <--- SEND THE TOKEN!
+                    "Authorization": `Bearer ${idToken}` 
                 },
                 body: JSON.stringify(data)
             });
             
             modal.style.display = "none";
-            document.getElementById("noteTitle").value = "";
-            document.getElementById("noteContent").value = "";
+            noteTitleInput.value = "";
+            noteContentInput.value = "";
 
             if (res.ok) {
-                fetchNotes(); // Refresh list only on success
+                fetchNotes();
                 alert("Note posted successfully!");
             } else {
                 const errorResult = await res.json();
@@ -253,9 +330,8 @@
         });
 
 
-        // --- D. NOTE FETCHING LOGIC (REUSED/CLEANED UP) ---
+        // --- D. NOTE FETCHING LOGIC ---
         
-        // Renamed function and fixed the double-slash in the URL
         async function fetchNotes() { 
             const url = `https://studyhub-backend-iy1e.onrender.com/get_notes?grade=${GRADE}&subject=${SUBJECT}`;
             
@@ -263,19 +339,17 @@
                 const response = await fetch(url);
                 const notes = await response.json();
 
-                const container = document.getElementById('notes-container');
-                container.innerHTML = '';
+                notesContainer.innerHTML = '';
 
-                if (notes.length === 0 || notes.error) {
-                    container.innerHTML = '<p>No notes found or error occurred.</p>';
+                if (!Array.isArray(notes) || notes.length === 0) {
+                    notesContainer.innerHTML = '<p>No notes found yet. Be the first to post!</p>';
                     return;
                 }
 
                 notes.forEach(note => {
                     const div = document.createElement('div');
                     div.className = 'note';
-                    // Note: 'author' is not sent by the backend. Use 'authorId' if available.
-                    // For now, let's keep it simple:
+                    
                     const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
                     
                     div.innerHTML = `
@@ -283,11 +357,11 @@
                         <div class="note-author">By: ${authorDisplay}</div>
                         <div class="note-content">${note.content}</div>
                     `;
-                    container.appendChild(div);
+                    notesContainer.appendChild(div);
                 });
             } catch (error) {
                 console.error("Error fetching notes:", error);
-                document.getElementById('notes-container').innerHTML = '<p>Error fetching notes.</p>';
+                notesContainer.innerHTML = '<p>Error fetching notes.</p>';
             }
         }
 
