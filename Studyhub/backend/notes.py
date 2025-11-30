@@ -7,8 +7,8 @@ def add_note(grade, subject, title, content, author):
         "subject": subject,
         "title": title,
         "content": content,
-        "author": author,
-        "date": datetime.utcnow()
+        "authorId": author, # Use authorId to be clearer that it's the UID
+        "dateCreated": datetime.utcnow() # Firestore handles datetime objects correctly
     }
     db.collection('notes').add(note_data)
     print("Note added")
