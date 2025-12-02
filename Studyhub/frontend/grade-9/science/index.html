@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grade 9 Science Notes</title>
+    <title>Grade 9 Science Questions&Notes</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
         h1, h2 { color: #333; }
@@ -147,7 +147,7 @@
     </style>
 </head>
 <body>
-    <h1>Grade 9 Science Notes</h1>
+    <h1>Grade 9 Science Q&A / Notes</h1>
     
     <div id="auth-ui">
         <p id="auth-status">Loading user status...</p>
@@ -169,21 +169,26 @@
     <div id="noteModal" class="modal" style="display: none;"> 
     <div class="modal-content">
         <h2>Post a Note</h2>
-
+        <select id="postCategory" required style="width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc;">
+            <option value="">-- Select Post Type --</option>
+            <option value="note">Study Note</option>
+            <option value="question">Question</option>
+            <option value="solution">Solution/Answer</option>
+        </select>
         <input id="noteTitle" type="text" placeholder="Title" required>
         <textarea id="noteContent" placeholder="Write your note here..." required></textarea>
-
+        
         <div class="modal-actions">
-        <button id="submitNote" class="submit-btn">Submit</button>
         <button id="closeModal" class="cancel-btn">Cancel</button>
+        <button id="submitNote" class="submit-btn">Submit</button>
         </div>
     </div>
     </div>
 
     <hr>
 
-    <h2>Community Notes</h2>
-    <div id="notes-container">Loading notes...</div>
+    <h2>Community Questions & Notes</h2>
+    <div id="notes-container">Loading posts...</div>
 
     <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
@@ -227,143 +232,170 @@
 
         // --- A. AUTHENTICATION STATE HANDLER ---
         subscribeToAuthChanges((user) => {
-            currentUser = user; 
-            
-            if (user) {
-                // LOGGED IN
-                authStatus.textContent = `Welcome, ${user.email}!`;
-                loginForm.style.display = 'none';
-                signOutButton.style.display = 'block';
-                postNoteBtn.style.display = 'block';
-            } else {
-                // LOGGED OUT
-                authStatus.textContent = "Please sign in to post notes.";
-                loginForm.style.display = 'block';
-                signOutButton.style.display = 'none';
-                postNoteBtn.style.display = 'none';
-            }
-        });
+        currentUser = user; 
+        
+        if (user) {
+            authStatus.textContent = `Welcome, ${user.email}!`;
+            loginForm.style.display = 'none';
+            signOutButton.style.display = 'block';
+            postNoteBtn.style.display = 'block';
+        } else {
+            authStatus.textContent = "Please sign in to post.";
+            loginForm.style.display = 'block';
+            signOutButton.style.display = 'none';
+            postNoteBtn.style.display = 'none';
+        }
+    });
 
 
-        // --- B. AUTHENTICATION LOGIC ---
+    // --- B. AUTHENTICATION LOGIC (Correct) ---
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = emailInput.value;
+        const password = passwordInput.value;
 
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = emailInput.value;
-            const password = passwordInput.value;
+        signIn(email, password)
+            .catch(() => {
+                return signUp(email, password)
+                    .catch(error => {
+                        alert(`Authentication Error: ${error.message}`);
+                    });
+            });
+    });
 
-            // Attempt to sign in first
-            signIn(email, password)
-                .catch(() => {
-                    // If sign-in fails, attempt to sign up
-                    return signUp(email, password)
-                        .catch(error => {
-                            alert(`Authentication Error: ${error.message}`);
-                        });
-                });
-        });
+    signOutButton.addEventListener('click', () => {
+        userSignOut();
+    });
 
-        signOutButton.addEventListener('click', () => {
-            userSignOut();
-        });
+
 
 
         // --- C. NOTE POSTING LOGIC (UPDATED WITH TOKEN!) ---
 
         postNoteBtn.addEventListener("click", () => {
-            if (currentUser) {
-                modal.style.display = "flex"; // Show modal
-            } else {
-                alert("You must be signed in to post a note.");
-            }
+        if (currentUser) {
+            modal.style.display = "flex"; 
+        } else {
+            alert("You must be signed in to post a note.");
+        }
+    });
+
+    closeModalBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    submitNoteBtn.addEventListener("click", async () => {
+        const title = noteTitleInput.value;
+        const content = noteContentInput.value;
+
+        if (!title || !content) {
+            alert("Please fill in both fields.");
+            return;
+        }
+        
+        const idToken = await getCurrentUserToken(true); 
+
+        if (!idToken) {
+            alert("Error: User token not found. Please sign in again.");
+            return;
+        }
+        
+        const category = document.getElementById("postCategory").value; 
+
+        if (!category) {
+            alert("Please select a post type.");
+            return;
+        }
+        
+        const data = { 
+            grade: GRADE, 
+            subject: SUBJECT, 
+            category: category, 
+            title, 
+            content,
+        };
+
+        const res = await fetch("https://studyhub-backend-iy1e.onrender.com/add_note", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${idToken}` 
+            },
+            body: JSON.stringify(data)
         });
+        
+        modal.style.display = "none";
+        noteTitleInput.value = "";
+        noteContentInput.value = "";
 
-        closeModalBtn.addEventListener("click", () => {
-            modal.style.display = "none";
-        });
-
-        submitNoteBtn.addEventListener("click", async () => {
-            const title = noteTitleInput.value;
-            const content = noteContentInput.value;
-
-            if (!title || !content) {
-                alert("Please fill in both fields.");
-                return;
-            }
-            
-            // 1. GET THE SECURITY TOKEN
-            const idToken = await getCurrentUserToken(true); 
-
-            if (!idToken) {
-                alert("Error: User token not found. Please sign in again.");
-                return;
-            }
-
-            const data = { 
-                grade: GRADE, 
-                subject: SUBJECT, 
-                title, 
-                content,
-            };
-
-            // NOTE: Check your backend route. Assuming /add_note is the correct endpoint.
-            const res = await fetch("https://studyhub-backend-iy1e.onrender.com/add_note", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${idToken}` 
-                },
-                body: JSON.stringify(data)
-            });
-            
-            modal.style.display = "none";
-            noteTitleInput.value = "";
-            noteContentInput.value = "";
-
-            if (res.ok) {
-                fetchNotes();
-                alert("Note posted successfully!");
-            } else {
-                const errorResult = await res.json();
-                alert(`Failed to post note: ${errorResult.message || res.statusText}`);
-            }
-        });
+        if (res.ok) {
+            fetchNotes();
+            alert("Posted successfully!");
+        } else {
+            const errorResult = await res.json();
+            alert(`Failed to post: ${errorResult.message || res.statusText}`);
+        }
+    });
 
 
         // --- D. NOTE FETCHING LOGIC ---
+async function fetchNotes() { 
+        const url = `https://studyhub-backend-iy1e.onrender.com/get_notes?grade=${GRADE}&subject=${SUBJECT}`;
         
-        async function fetchNotes() { 
-            const url = `https://studyhub-backend-iy1e.onrender.com/get_notes?grade=${GRADE}&subject=${SUBJECT}`;
-            
-            try {
-                const response = await fetch(url);
-                const notes = await response.json();
+        try {
+            const response = await fetch(url);
+            const notes = await response.json();
 
-                notesContainer.innerHTML = '';
+            notesContainer.innerHTML = '';
 
-                if (!Array.isArray(notes) || notes.length === 0) {
-                    notesContainer.innerHTML = '<p>No notes found yet. Be the first to post!</p>';
-                    return;
-                }
-
-                notes.forEach(note => {
-                    const div = document.createElement('div');
-                    div.className = 'note';
-                    
-                    const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
-                    
-                    div.innerHTML = `
-                        <div class="note-title">${note.title}</div>
-                        <div class="note-author">By: ${authorDisplay}</div>
-                        <div class="note-content">${note.content}</div>
-                    `;
-                    notesContainer.appendChild(div);
-                });
-            } catch (error) {
-                console.error("Error fetching notes:", error);
-                notesContainer.innerHTML = '<p>Error fetching notes.</p>';
+            if (!Array.isArray(notes) || notes.length === 0) {
+                notesContainer.innerHTML = '<p>No posts found yet. Be the first to post!</p>';
+                return;
             }
+
+            notes.forEach(note => {
+                const div = document.createElement('div');
+                div.className = 'note';
+                const categoryText = note.category || 'Note';
+                let badgeStyle = '';
+                
+                switch (categoryText.toLowerCase()) {
+                    case 'question':
+                        badgeStyle = 'background-color: #ffc107; color: #343a40;'; // Yellow
+                        break;
+                    case 'solution':
+                        badgeStyle = 'background-color: #28a745; color: white;'; // Green
+                        break;
+                    case 'note':
+                    default:
+                        badgeStyle = 'background-color: #007bff; color: white;'; // Blue (Default)
+                }
+                
+                const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
+                
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                        <div class="note-title" style="margin: 0;">${note.title}</div>
+                        <span class="note-type-badge" style="
+                            ${badgeStyle}
+                            font-size: 0.8em;
+                            padding: 3px 8px;
+                            border-radius: 12px;
+                            font-weight: bold;
+                            white-space: nowrap;
+                            margin-left: 10px;
+                        ">${categoryText.toUpperCase()}</span> 
+                    </div>
+                    <div class="note-author">By: ${authorDisplay}</div>
+                    <div class="note-content">${note.content}</div>
+                `;
+                notesContainer.appendChild(div);
+            });
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+            notesContainer.innerHTML = '<p>Error fetching posts.</p>';
         }
+    }
 
         fetchNotes(); // Initial load
     </script>

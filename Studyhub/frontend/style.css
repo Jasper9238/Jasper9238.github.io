@@ -11,6 +11,30 @@ body {
   color: #333;
 }
 
+        #sign-out-btn-main {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        #sign-out-btn-main:hover {
+            background: #c82333;
+        }
+#button{
+  background: #3551dc;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+}#sign-out-btn-main:hover {
+            background: #1a39a7;
+        }
+
 /* Navbar */
 .navbar {
   display: flex;

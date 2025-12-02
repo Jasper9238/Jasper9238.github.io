@@ -61,7 +61,7 @@ def api_add_note(uid):
     data['authorId'] = uid 
     
     # 2. Check for required fields (I am assuming 'author' is now redundant)
-    required_fields = ['grade','subject','title','content'] 
+    required_fields = ['grade','subject','title','content','category'] 
 
     for field in required_fields:
         if field not in data:
@@ -75,7 +75,8 @@ def api_add_note(uid):
         title=data['title'],
         content=data['content'],
         # IMPORTANT: We are using the secure uid as the author for the database
-        author=uid # Use the verified UID instead of the author field from the frontend
+        author=uid, # Use the verified UID instead of the author field from the frontend
+        category=data['category']
     )
     
     return jsonify({"message": "Note added successfully"}), 201
