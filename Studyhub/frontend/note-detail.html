@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Post Detail - Loading...</title>
+    
+    <style>
+        /* --- COPY ALL CSS FROM grade9-science.html HERE --- */
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1, h2, h3 { color: #333; }
+        
+        /* Note Styling (from original) */
+        .note { 
+            border: 1px solid #ddd; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-radius: 8px; 
+            background-color: #f9f9f9;
+        }
+        .note-title { 
+            font-weight: bold; 
+            font-size: 1.3em; 
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+        /* ... (Include all other necessary styles like .submit-btn, .cancel-btn, etc.) */
+
+        /* NEW Style for Comments */
+        .comment-box { 
+            border: 1px solid #eee; 
+            padding: 10px; 
+            margin-bottom: 10px;
+            border-radius: 6px; 
+            background: #fcfcfc;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><a href="grade9-science.html">← Back to Posts</a></h1>
+        
+        <div id="auth-ui">
+            <p id="auth-status">Loading user status...</p>
+            </div>
+    </header>
+
+    <hr>
+
+    <div id="loading-status">Loading post...</div>
+
+    <div id="main-post-container" class="note" style="display:none;">
+        </div>
+
+    <div id="reply-form-container" style="margin-top: 20px; display:none;">
+        <h3>Leave a Comment</h3>
+        <textarea id="replyContent" placeholder="Type your reply here..." rows="3" style="width: 100%; padding: 8px;"></textarea>
+        <button id="submitReplyBtn" class="submit-btn">Post Reply</button>
+    </div>
+
+    <hr>
+
+    <h3>Replies (<span id="replyCount">0</span>)</h3>
+    <div id="comments-container">
+        </div>
+
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
+    <script type="module" src="/js/firebaseAuth.js"></script> 
+    
+    <script type="module">
+        import { 
+            subscribeToAuthChanges, 
+            getCurrentUserToken 
+        } from '../../js/firebaseAuth.js'; 
+
+        // --- CONSTANTS ---
+        const BACKEND_URL = "https://studyhub-backend-iy1e.onrender.com";
+        const urlParams = new URLSearchParams(window.location.search);
+        const postId = urlParams.get('id'); 
+        let currentUser = null; 
+
+        // --- UI ELEMENTS ---
+        const mainPostContainer = document.getElementById('main-post-container');
+        const commentsContainer = document.getElementById('comments-container');
+        const replyFormContainer = document.getElementById('reply-form-container');
+        const replyContentArea = document.getElementById('replyContent');
+        const submitReplyBtn = document.getElementById('submitReplyBtn');
+
+        // --- AUTH & UI STATE ---
+        subscribeToAuthChanges((user) => {
+            currentUser = user; 
+            // Show/hide reply form based on login status
+            replyFormContainer.style.display = user ? 'block' : 'none';
+        });
+
+
+        // --- A. DATA FETCHING ---
+        async function fetchPostDetail() {
+            if (!postId) {
+                document.getElementById('loading-status').textContent = 'Error: No Post ID provided.';
+                return;
+            }
+
+            document.getElementById('loading-status').textContent = 'Loading...';
+            
+            try {
+                const response = await fetch(`${BACKEND_URL}/get_note/${postId}`);
+                if (response.status === 404) {
+                    document.getElementById('loading-status').textContent = 'Post not found.';
+                    return;
+                }
+                if (!response.ok) throw new Error("Failed to fetch post.");
+                
+                const postData = await response.json();
+                
+                document.getElementById('loading-status').style.display = 'none';
+                mainPostContainer.style.display = 'block';
+
+                renderMainPost(postData);
+                renderComments(postData.comments);
+
+            } catch (error) {
+                document.getElementById('loading-status').textContent = `Error loading post: ${error.message}`;
+                console.error(error);
+            }
+        }
+
+        // --- B. RENDERING FUNCTIONS ---
+
+        function renderMainPost(note) {
+            // Logic to determine badge style (copied from list page)
+            const categoryText = note.category || 'Note';
+            let badgeStyle = '';
+            switch (categoryText.toLowerCase()) {
+                case 'question': badgeStyle = 'background-color: #ffc107; color: #343a40;'; break;
+                case 'solution': badgeStyle = 'background-color: #28a745; color: white;'; break;
+                default: badgeStyle = 'background-color: #007bff; color: white;';
+            }
+            
+            const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
+            document.getElementById('pageTitle').textContent = note.title;
+
+            mainPostContainer.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                    <div class="note-title" style="margin: 0; color: #333;">${note.title}</div>
+                    <span class="note-type-badge" style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
+                        ${categoryText.toUpperCase()}
+                    </span> 
+                </div>
+                <div class="note-author" style="margin-bottom: 10px;">By: ${authorDisplay}</div>
+                <div class="note-content">${note.content}</div>
+                <hr style="border-top: 1px solid #ddd; margin-top: 15px;">
+                <small style="color:#999;">Posted: ${new Date(note.dateCreated._seconds * 1000).toLocaleDateString()}</small>
+            `;
+        }
+
+        function renderComments(comments) {
+            document.getElementById('replyCount').textContent = comments.length;
+            commentsContainer.innerHTML = '';
+
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '<p>No replies yet. Be the first!</p>';
+                return;
+            }
+            
+            comments.forEach(comment => {
+                const div = document.createElement('div');
+                div.className = 'comment-box';
+                
+                const commentAuthor = comment.authorId ? `User ID: ${comment.authorId.substring(0, 6)}...` : 'Unknown';
+                
+                div.innerHTML = `
+                    <p style="margin-bottom: 5px;">${comment.content}</p>
+                    <small style="color: #777;">
+                        By ${commentAuthor} 
+                        (${new Date(comment.dateCreated._seconds * 1000).toLocaleTimeString()} - 
+                        ${new Date(comment.dateCreated._seconds * 1000).toLocaleDateString()})
+                    </small>
+                `;
+                commentsContainer.appendChild(div);
+            });
+        }
+
+        // --- C. REPLY SUBMISSION LOGIC ---
+        submitReplyBtn.addEventListener("click", async () => {
+            if (!currentUser) {
+                alert("Please sign in to post a reply.");
+                return;
+            }
+
+            const content = replyContentArea.value.trim();
+            if (!content) {
+                alert("Reply content cannot be empty.");
+                return;
+            }
+            
+            submitReplyBtn.disabled = true;
+            const idToken = await getCurrentUserToken(true); 
+
+            try {
+                const data = { postId, content }; 
+                const res = await fetch(`${BACKEND_URL}/add_comment`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${idToken}` 
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (res.ok) {
+                    replyContentArea.value = "";
+                    await fetchPostDetail(); // Refresh the page content to show the new comment
+                } else {
+                    const errorResult = await res.json();
+                    alert(`Failed to post reply: ${errorResult.message || res.statusText}`);
+                }
+            } catch (e) {
+                alert("An error occurred while posting.");
+                console.error(e);
+            } finally {
+                submitReplyBtn.disabled = false;
+            }
+        });
+
+        // --- Initial Load ---
+        fetchPostDetail();
+    </script>
+</body>
+</html>
