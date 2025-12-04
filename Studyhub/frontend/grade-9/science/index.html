@@ -371,7 +371,7 @@ async function fetchNotes() {
                 const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
                 
                 const noteTitleHTML = `
-                    <a href="/note-detail.html?id=${note.id}" 
+                    <a href="../../../note-detail.html?id=${note.id}" 
                        style="text-decoration: none; color: inherit;">
                         ${note.title}
                     </a>`;
