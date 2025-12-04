@@ -337,8 +337,6 @@
         }
     });
 
-
-        // --- D. NOTE FETCHING LOGIC ---
 async function fetchNotes() { 
         const url = `https://studyhub-backend-iy1e.onrender.com/get_notes?grade=${GRADE}&subject=${SUBJECT}`;
         
@@ -354,28 +352,38 @@ async function fetchNotes() {
             }
 
             notes.forEach(note => {
-                const div = document.createElement('div');
-                div.className = 'note';
                 const categoryText = note.category || 'Note';
                 let badgeStyle = '';
                 
                 switch (categoryText.toLowerCase()) {
+                    // ... (Case logic for badgeStyle as before) ...
                     case 'question':
-                        badgeStyle = 'background-color: #ffc107; color: #343a40;'; // Yellow
+                        badgeStyle = 'background-color: #ffc107; color: #343a40;';
                         break;
                     case 'solution':
-                        badgeStyle = 'background-color: #28a745; color: white;'; // Green
+                        badgeStyle = 'background-color: #28a745; color: white;';
                         break;
                     case 'note':
                     default:
-                        badgeStyle = 'background-color: #007bff; color: white;'; // Blue (Default)
+                        badgeStyle = 'background-color: #007bff; color: white;';
                 }
                 
                 const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
                 
+                const noteTitleHTML = `
+                    <a href="/note-detail.html?id=${note.id}" 
+                       style="text-decoration: none; color: inherit;">
+                        ${note.title}
+                    </a>`;
+                
+                const div = document.createElement('div');
+                div.className = 'note';
+                
+                // --- FULL, STYLED STRUCTURE WITH LINK ---
                 div.innerHTML = `
+                    
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
-                        <div class="note-title" style="margin: 0;">${note.title}</div>
+                        <div class="note-title" style="margin: 0;">${noteTitleHTML}</div>
                         <span class="note-type-badge" style="
                             ${badgeStyle}
                             font-size: 0.8em;

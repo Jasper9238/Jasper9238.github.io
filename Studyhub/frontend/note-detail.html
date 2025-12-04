@@ -6,27 +6,34 @@
     <title id="pageTitle">Post Detail - Loading...</title>
     
     <style>
-        /* --- COPY ALL CSS FROM grade9-science.html HERE --- */
+        /* --- General and Base Styles --- */
         body { font-family: Arial, sans-serif; padding: 20px; }
         h1, h2, h3 { color: #333; }
         
-        /* Note Styling (from original) */
+        /* Note Styling (for the main post) */
         .note { 
             border: 1px solid #ddd; 
             padding: 15px; 
-            margin-bottom: 15px; 
+            margin-bottom: 25px; 
             border-radius: 8px; 
             background-color: #f9f9f9;
         }
         .note-title { 
             font-weight: bold; 
-            font-size: 1.3em; 
+            font-size: 1.5em; 
             color: #2196F3;
             margin-bottom: 5px;
         }
-        /* ... (Include all other necessary styles like .submit-btn, .cancel-btn, etc.) */
-
-        /* NEW Style for Comments */
+        .submit-btn {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Style for Comments */
         .comment-box { 
             border: 1px solid #eee; 
             padding: 10px; 
@@ -34,19 +41,20 @@
             border-radius: 6px; 
             background: #fcfcfc;
         }
+        .comment-author {
+            font-size: 0.8em;
+            color: #777;
+            margin-top: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
     <header>
-        <h1><a href="grade9-science.html">← Back to Posts</a></h1>
-        
-        <div id="auth-ui">
-            <p id="auth-status">Loading user status...</p>
-            </div>
+        <h1><a href="/grade9-science.html">← Back to Posts</a></h1>
     </header>
 
     <hr>
-
     <div id="loading-status">Loading post...</div>
 
     <div id="main-post-container" class="note" style="display:none;">
@@ -72,9 +80,9 @@
         import { 
             subscribeToAuthChanges, 
             getCurrentUserToken 
-        } from '../../js/firebaseAuth.js'; 
+        } from '/js/firebaseAuth.js'; // Note the leading / for root access
 
-        // --- CONSTANTS ---
+        // --- CONFIG ---
         const BACKEND_URL = "https://studyhub-backend-iy1e.onrender.com";
         const urlParams = new URLSearchParams(window.location.search);
         const postId = urlParams.get('id'); 
@@ -90,10 +98,8 @@
         // --- AUTH & UI STATE ---
         subscribeToAuthChanges((user) => {
             currentUser = user; 
-            // Show/hide reply form based on login status
             replyFormContainer.style.display = user ? 'block' : 'none';
         });
-
 
         // --- A. DATA FETCHING ---
         async function fetchPostDetail() {
@@ -105,6 +111,7 @@
             document.getElementById('loading-status').textContent = 'Loading...';
             
             try {
+                // Call the new backend route
                 const response = await fetch(`${BACKEND_URL}/get_note/${postId}`);
                 if (response.status === 404) {
                     document.getElementById('loading-status').textContent = 'Post not found.';
@@ -129,7 +136,7 @@
         // --- B. RENDERING FUNCTIONS ---
 
         function renderMainPost(note) {
-            // Logic to determine badge style (copied from list page)
+            // Logic to determine badge style (for display consistency)
             const categoryText = note.category || 'Note';
             let badgeStyle = '';
             switch (categoryText.toLowerCase()) {
@@ -144,7 +151,7 @@
             mainPostContainer.innerHTML = `
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
                     <div class="note-title" style="margin: 0; color: #333;">${note.title}</div>
-                    <span class="note-type-badge" style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
+                    <span style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
                         ${categoryText.toUpperCase()}
                     </span> 
                 </div>
@@ -172,11 +179,11 @@
                 
                 div.innerHTML = `
                     <p style="margin-bottom: 5px;">${comment.content}</p>
-                    <small style="color: #777;">
+                    <span class="comment-author">
                         By ${commentAuthor} 
                         (${new Date(comment.dateCreated._seconds * 1000).toLocaleTimeString()} - 
                         ${new Date(comment.dateCreated._seconds * 1000).toLocaleDateString()})
-                    </small>
+                    </span>
                 `;
                 commentsContainer.appendChild(div);
             });
@@ -211,7 +218,7 @@
                 
                 if (res.ok) {
                     replyContentArea.value = "";
-                    await fetchPostDetail(); // Refresh the page content to show the new comment
+                    await fetchPostDetail(); // Refresh the page content
                 } else {
                     const errorResult = await res.json();
                     alert(`Failed to post reply: ${errorResult.message || res.statusText}`);
