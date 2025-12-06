@@ -25,7 +25,7 @@ subscribeToAuthChanges((user) => {
 
         // Show Sign Out button and update Post Section
         signOutButton.style.display = 'inline-block';
-        postSection.innerHTML = `<p>You are logged in! Click <a href="frontend/grade-9/science/index.html">here</a> to post your first note.</p>`; 
+        postSection.innerHTML = `<p>You are logged in! Click <a href="/grade-9/science/index.html">here</a> to post your first note.</p>`; 
 
         // Remove the click listener that shows the form, if it exists
         navAuthButton.removeEventListener('click', toggleLoginForm);

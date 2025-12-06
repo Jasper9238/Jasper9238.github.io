@@ -77,162 +77,169 @@
     <script type="module" src="/js/firebaseAuth.js"></script> 
     
     <script type="module">
-        import { 
-            subscribeToAuthChanges, 
-            getCurrentUserToken 
-        } from '/js/firebaseAuth.js'; // Note the leading / for root access
+    import { 
+        subscribeToAuthChanges, 
+        getCurrentUserToken 
+    } from '/js/firebaseAuth.js'; 
 
-        // --- CONFIG ---
-        const BACKEND_URL = "https://studyhub-backend-iy1e.onrender.com";
-        const urlParams = new URLSearchParams(window.location.search);
-        const postId = urlParams.get('id'); 
-        let currentUser = null; 
+    // --- CONFIG ---
+    const BACKEND_URL = "https://studyhub-backend-iy1e.onrender.com";
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('id'); 
+    let currentUser = null; 
 
-        // --- UI ELEMENTS ---
-        const mainPostContainer = document.getElementById('main-post-container');
-        const commentsContainer = document.getElementById('comments-container');
-        const replyFormContainer = document.getElementById('reply-form-container');
-        const replyContentArea = document.getElementById('replyContent');
-        const submitReplyBtn = document.getElementById('submitReplyBtn');
+    // --- UI ELEMENTS ---
+    const mainPostContainer = document.getElementById('main-post-container');
+    const commentsContainer = document.getElementById('comments-container');
+    const replyFormContainer = document.getElementById('reply-form-container');
+    const replyContentArea = document.getElementById('replyContent');
+    const submitReplyBtn = document.getElementById('submitReplyBtn');
 
-        // --- AUTH & UI STATE ---
-        subscribeToAuthChanges((user) => {
-            currentUser = user; 
-            replyFormContainer.style.display = user ? 'block' : 'none';
-        });
+    // --- AUTH & UI STATE ---
+    subscribeToAuthChanges((user) => {
+        currentUser = user; 
+        replyFormContainer.style.display = user ? 'block' : 'none';
+    });
 
-        // --- A. DATA FETCHING ---
-        async function fetchPostDetail() {
-            if (!postId) {
-                document.getElementById('loading-status').textContent = 'Error: No Post ID provided.';
+    // --- A. DATA FETCHING ---
+    async function fetchPostDetail() {
+        if (!postId) {
+            document.getElementById('loading-status').textContent = 'Error: No Post ID provided.';
+            return;
+        }
+
+        document.getElementById('loading-status').textContent = 'Loading...';
+        
+        try {
+            const response = await fetch(`${BACKEND_URL}/get_note/${postId}`);
+            
+            if (response.status === 404) {
+                document.getElementById('loading-status').textContent = 'Post not found.';
                 return;
             }
-
-            document.getElementById('loading-status').textContent = 'Loading...';
+            if (!response.ok) throw new Error(`Server Error: ${response.status}`);
             
+            const postData = await response.json();
+            
+            document.getElementById('loading-status').style.display = 'none';
+            mainPostContainer.style.display = 'block';
+
+            renderMainPost(postData);
+            renderComments(postData.comments);
+
+        } catch (error) {
+            document.getElementById('loading-status').textContent = `Error loading post: ${error.message}`;
+            console.error(error);
+        }
+    }
+
+    // --- B. RENDERING FUNCTIONS ---
+    function renderMainPost(note) {
+        const categoryText = note.category || 'Note';
+        let badgeStyle = '';
+        switch (categoryText.toLowerCase()) {
+            case 'question': badgeStyle = 'background-color: #ffc107; color: #343a40;'; break;
+            case 'solution': badgeStyle = 'background-color: #28a745; color: white;'; break;
+            default: badgeStyle = 'background-color: #007bff; color: white;';
+        }
+        
+        const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
+        document.getElementById('pageTitle').textContent = note.title;
+
+        // 🚨 DATE FIX: Simple string conversion
+        const dateString = note.dateCreated ? new Date(note.dateCreated).toLocaleDateString() : 'Date Unknown';
+
+        mainPostContainer.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                <div class="note-title" style="margin: 0; color: #333;">${note.title}</div>
+                <span style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
+                    ${categoryText.toUpperCase()}
+                </span> 
+            </div>
+            <div class="note-author" style="margin-bottom: 10px;">By: ${authorDisplay}</div>
+            <div class="note-content">${note.content}</div>
+            <hr style="border-top: 1px solid #ddd; margin-top: 15px;">
+            <small style="color:#999;">Posted: ${dateString}</small>
+        `;
+    }
+
+    function renderComments(comments) {
+        document.getElementById('replyCount').textContent = comments.length;
+        commentsContainer.innerHTML = '';
+
+        if (comments.length === 0) {
+            commentsContainer.innerHTML = '<p>No replies yet. Be the first!</p>';
+            return;
+        }
+        
+        comments.forEach(comment => {
+            const div = document.createElement('div');
+            div.className = 'comment-box';
+            
+            const commentAuthor = comment.authorId ? `User ID: ${comment.authorId.substring(0, 6)}...` : 'Unknown';
+            
+            // 🚨 DATE FIX: Simple string conversion
+            let dateDisplay = "";
             try {
-                // Call the new backend route
-                const response = await fetch(`${BACKEND_URL}/get_note/${postId}`);
-                if (response.status === 404) {
-                    document.getElementById('loading-status').textContent = 'Post not found.';
-                    return;
-                }
-                if (!response.ok) throw new Error("Failed to fetch post.");
-                
-                const postData = await response.json();
-                
-                document.getElementById('loading-status').style.display = 'none';
-                mainPostContainer.style.display = 'block';
-
-                renderMainPost(postData);
-                renderComments(postData.comments);
-
-            } catch (error) {
-                document.getElementById('loading-status').textContent = `Error loading post: ${error.message}`;
-                console.error(error);
-            }
-        }
-
-        // --- B. RENDERING FUNCTIONS ---
-
-        function renderMainPost(note) {
-            // Logic to determine badge style (for display consistency)
-            const categoryText = note.category || 'Note';
-            let badgeStyle = '';
-            switch (categoryText.toLowerCase()) {
-                case 'question': badgeStyle = 'background-color: #ffc107; color: #343a40;'; break;
-                case 'solution': badgeStyle = 'background-color: #28a745; color: white;'; break;
-                default: badgeStyle = 'background-color: #007bff; color: white;';
-            }
-            
-            const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
-            document.getElementById('pageTitle').textContent = note.title;
-
-            mainPostContainer.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
-                    <div class="note-title" style="margin: 0; color: #333;">${note.title}</div>
-                    <span style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
-                        ${categoryText.toUpperCase()}
-                    </span> 
-                </div>
-                <div class="note-author" style="margin-bottom: 10px;">By: ${authorDisplay}</div>
-                <div class="note-content">${note.content}</div>
-                <hr style="border-top: 1px solid #ddd; margin-top: 15px;">
-                <small style="color:#999;">Posted: ${new Date(note.dateCreated._seconds * 1000).toLocaleDateString()}</small>
-            `;
-        }
-
-        function renderComments(comments) {
-            document.getElementById('replyCount').textContent = comments.length;
-            commentsContainer.innerHTML = '';
-
-            if (comments.length === 0) {
-                commentsContainer.innerHTML = '<p>No replies yet. Be the first!</p>';
-                return;
-            }
-            
-            comments.forEach(comment => {
-                const div = document.createElement('div');
-                div.className = 'comment-box';
-                
-                const commentAuthor = comment.authorId ? `User ID: ${comment.authorId.substring(0, 6)}...` : 'Unknown';
-                
-                div.innerHTML = `
-                    <p style="margin-bottom: 5px;">${comment.content}</p>
-                    <span class="comment-author">
-                        By ${commentAuthor} 
-                        (${new Date(comment.dateCreated._seconds * 1000).toLocaleTimeString()} - 
-                        ${new Date(comment.dateCreated._seconds * 1000).toLocaleDateString()})
-                    </span>
-                `;
-                commentsContainer.appendChild(div);
-            });
-        }
-
-        // --- C. REPLY SUBMISSION LOGIC ---
-        submitReplyBtn.addEventListener("click", async () => {
-            if (!currentUser) {
-                alert("Please sign in to post a reply.");
-                return;
-            }
-
-            const content = replyContentArea.value.trim();
-            if (!content) {
-                alert("Reply content cannot be empty.");
-                return;
-            }
-            
-            submitReplyBtn.disabled = true;
-            const idToken = await getCurrentUserToken(true); 
-
-            try {
-                const data = { postId, content }; 
-                const res = await fetch(`${BACKEND_URL}/add_comment`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${idToken}` 
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (res.ok) {
-                    replyContentArea.value = "";
-                    await fetchPostDetail(); // Refresh the page content
-                } else {
-                    const errorResult = await res.json();
-                    alert(`Failed to post reply: ${errorResult.message || res.statusText}`);
-                }
+                 const d = new Date(comment.dateCreated);
+                 dateDisplay = `${d.toLocaleTimeString()} - ${d.toLocaleDateString()}`;
             } catch (e) {
-                alert("An error occurred while posting.");
-                console.error(e);
-            } finally {
-                submitReplyBtn.disabled = false;
+                 dateDisplay = "Date Unknown";
             }
-        });
 
-        // --- Initial Load ---
-        fetchPostDetail();
-    </script>
+            div.innerHTML = `
+                <p style="margin-bottom: 5px;">${comment.content}</p>
+                <span class="comment-author">
+                    By ${commentAuthor} (${dateDisplay})
+                </span>
+            `;
+            commentsContainer.appendChild(div);
+        });
+    }
+
+    // --- C. REPLY SUBMISSION LOGIC ---
+    submitReplyBtn.addEventListener("click", async () => {
+        if (!currentUser) {
+            alert("Please sign in to post a reply.");
+            return;
+        }
+        const content = replyContentArea.value.trim();
+        if (!content) {
+            alert("Reply content cannot be empty.");
+            return;
+        }
+        
+        submitReplyBtn.disabled = true;
+        const idToken = await getCurrentUserToken(true); 
+
+        try {
+            const data = { postId, content }; 
+            const res = await fetch(`${BACKEND_URL}/add_comment`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}` 
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (res.ok) {
+                replyContentArea.value = "";
+                await fetchPostDetail(); 
+            } else {
+                const errorResult = await res.json();
+                alert(`Failed to post reply: ${errorResult.message || res.statusText}`);
+            }
+        } catch (e) {
+            alert("An error occurred while posting.");
+            console.error(e);
+        } finally {
+            submitReplyBtn.disabled = false;
+        }
+    });
+
+    // --- Initial Load ---
+    fetchPostDetail();
+</script>
 </body>
 </html>
