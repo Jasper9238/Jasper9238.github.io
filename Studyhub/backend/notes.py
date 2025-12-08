@@ -58,7 +58,6 @@ def get_note_by_id(note_id):
         data = note_doc.to_dict()
         data['id'] = note_doc.id 
         
-        # 🚨 FIX: Convert date to string immediately
         serialize_date(data)
         
         return data
@@ -91,3 +90,52 @@ def add_comment(post_id, content, author_id):
     }
     db.collection('comments').add(comment_data)
     print(f"Comment added to post {post_id}")
+
+def add_reaction(post_id,type,authorId):
+    query = db.collection('opinion').where("postId", "==", post_id).where('userId', "==", authorId)
+    results = list(query.stream())
+    if results:
+        result = results[0]
+        resultId = result.id
+        resultType = result.to_dict()['type']
+        if resultType == type:
+            db.collection('opinion').document(resultId).delete()
+        else:
+            reaction_data = {
+                'postId': post_id,
+                'type': type,
+                'userId': authorId
+            }
+            db.collection('opinion').document(resultId).update(reaction_data)
+    else:
+        reaction_data = {
+            'postId': post_id,
+            'type': type,
+            'userId': authorId
+        }
+        db.collection('opinion').add(reaction_data)
+
+def search_reactions(postid):
+    query = db.collection('opinion').where("postId", "==", postid)
+    results = list(query.stream())
+    l,d = 0,0
+    for result in results:
+        resultType = result.to_dict().get('type')
+        if resultType == 'like':
+            l+=1
+        elif resultType=='dislike':
+            d+=1
+    return {
+        'likeCount': l,
+        'dislikeCount': d
+    }
+
+def get_user_reaction_state(post_id,uid):
+    query = db.collection('opinion').where('postId','==',post_id).where('userId','==',uid)
+    result = list(query.stream()) # should only have 1 
+    if result:
+        r = result[0]
+        reaction_type = r.to_dict().get('type', 'null')
+        return reaction_type
+    else:
+        return 'null'

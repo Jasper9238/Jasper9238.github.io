@@ -47,6 +47,21 @@
             margin-top: 5px;
             display: block;
         }
+        #likeBtn, #dislikeBtn {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            margin-right: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        
+        .active-reaction {
+            background-color: #007bff; /* Blue for active */
+            color: white;
+            border-color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -60,6 +75,12 @@
     <div id="main-post-container" class="note" style="display:none;">
         </div>
 
+    <div id="reaction-counts">
+        <span id="like-count">0</span>
+        <span id="dislike-count">0</span>
+    </div>
+    <button id="likeBtn" data-reaction-type="like">👍 Like</button>
+    <button id="dislikeBtn" data-reaction-type="dislike">👎 Dislike</button>
     <div id="reply-form-container" style="margin-top: 20px; display:none;">
         <h3>Leave a Comment</h3>
         <textarea id="replyContent" placeholder="Type your reply here..." rows="3" style="width: 100%; padding: 8px;"></textarea>
@@ -88,20 +109,32 @@
     const postId = urlParams.get('id'); 
     let currentUser = null; 
 
+    // --- NEW GLOBAL STATE ---
+    let currentUserReaction = 'null'; // 'like', 'dislike', or 'null'
+
     // --- UI ELEMENTS ---
     const mainPostContainer = document.getElementById('main-post-container');
     const commentsContainer = document.getElementById('comments-container');
     const replyFormContainer = document.getElementById('reply-form-container');
     const replyContentArea = document.getElementById('replyContent');
     const submitReplyBtn = document.getElementById('submitReplyBtn');
-
+    
+    // UI Elements
+    const likeBtn = document.getElementById('likeBtn');
+    const dislikeBtn = document.getElementById('dislikeBtn');
+    
     // --- AUTH & UI STATE ---
-    subscribeToAuthChanges((user) => {
+    subscribeToAuthChanges(async (user) => { // Made async to run reaction state fetch
         currentUser = user; 
         replyFormContainer.style.display = user ? 'block' : 'none';
+        
+        //  Fetch user's reaction state immediately on login/logout
+        if (postId) {
+             await fetchUserReactionState(postId);
+        }
     });
 
-    // --- A. DATA FETCHING ---
+    // --- A. DATA FETCHING (MODIFIED) ---
     async function fetchPostDetail() {
         if (!postId) {
             document.getElementById('loading-status').textContent = 'Error: No Post ID provided.';
@@ -126,15 +159,54 @@
 
             renderMainPost(postData);
             renderComments(postData.comments);
+            
+            // Render the total reaction counts received from the combined API
+            if (postData.reactions) {
+                renderReactionCounts(postData.reactions);
+            }
+
+            // Fetch user state separately as it requires the token
+            if (currentUser) {
+                await fetchUserReactionState(postId);
+            } else {
+                // Reset state and styles if logged out
+                currentUserReaction = 'null';
+                updateButtonStyles();
+            }
 
         } catch (error) {
             document.getElementById('loading-status').textContent = `Error loading post: ${error.message}`;
             console.error(error);
         }
     }
+    
+    // Function to fetch the user's specific state
+    async function fetchUserReactionState(postId) {
+        const idToken = await getCurrentUserToken(false); 
+        if (!idToken) return;
 
-    // --- B. RENDERING FUNCTIONS ---
+        try {
+            const response = await fetch(`${BACKEND_URL}/get_user_reaction/${postId}`, {
+                headers: {
+                    "Authorization": `Bearer ${idToken}`
+                }
+            });
+            
+            const data = await response.json();
+            
+            // Update global state
+            currentUserReaction = data.userReaction; // 'like', 'dislike', or 'null'
+            updateButtonStyles(); 
+
+        } catch (e) {
+            console.error("Could not fetch user reaction state:", e);
+        }
+    }
+
+
+    // --- B. RENDERING FUNCTIONS (MODIFIED) ---
     function renderMainPost(note) {
+        // ... (Your existing renderMainPost logic remains here) ...
         const categoryText = note.category || 'Note';
         let badgeStyle = '';
         switch (categoryText.toLowerCase()) {
@@ -146,7 +218,7 @@
         const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
         document.getElementById('pageTitle').textContent = note.title;
 
-        // 🚨 DATE FIX: Simple string conversion
+        //  Simple string conversion
         const dateString = note.dateCreated ? new Date(note.dateCreated).toLocaleDateString() : 'Date Unknown';
 
         mainPostContainer.innerHTML = `
@@ -164,6 +236,7 @@
     }
 
     function renderComments(comments) {
+        // ... (Your existing renderComments logic remains here) ...
         document.getElementById('replyCount').textContent = comments.length;
         commentsContainer.innerHTML = '';
 
@@ -178,7 +251,7 @@
             
             const commentAuthor = comment.authorId ? `User ID: ${comment.authorId.substring(0, 6)}...` : 'Unknown';
             
-            // 🚨 DATE FIX: Simple string conversion
+            // Simple string conversion
             let dateDisplay = "";
             try {
                  const d = new Date(comment.dateCreated);
@@ -196,8 +269,33 @@
             commentsContainer.appendChild(div);
         });
     }
+    
+    // 🚨 NEW: Function to render the total counts
+    function renderReactionCounts(counts) {
+        const likeCountEl = document.getElementById('like-count');
+        const dislikeCountEl = document.getElementById('dislike-count');
 
-    // --- C. REPLY SUBMISSION LOGIC ---
+        if (likeCountEl) likeCountEl.textContent = counts.likeCount;
+        if (dislikeCountEl) dislikeCountEl.textContent = counts.dislikeCount;
+    }
+    
+    // 🚨 NEW: Function to toggle the button style
+    function updateButtonStyles() {
+        if (!likeBtn || !dislikeBtn) return;
+
+        // Reset all active classes first
+        likeBtn.classList.remove('active-reaction');
+        dislikeBtn.classList.remove('active-reaction');
+
+        if (currentUserReaction === 'like') {
+            likeBtn.classList.add('active-reaction');
+        } else if (currentUserReaction === 'dislike') {
+            dislikeBtn.classList.add('active-reaction');
+        }
+    }
+
+
+    // --- C. REPLY SUBMISSION LOGIC (UNCHANGED) ---
     submitReplyBtn.addEventListener("click", async () => {
         if (!currentUser) {
             alert("Please sign in to post a reply.");
@@ -225,6 +323,7 @@
             
             if (res.ok) {
                 replyContentArea.value = "";
+                // 🚨 Refreshes counts/comments/etc.
                 await fetchPostDetail(); 
             } else {
                 const errorResult = await res.json();
@@ -238,8 +337,53 @@
         }
     });
 
+    // --- D. REACTION SUBMISSION LOGIC  ---
+    async function handleReactionClick(event) {
+        if (!currentUser) {
+            alert("Please log in to react to a post.");
+            return;
+        }
+        
+        const reactionType = event.currentTarget.dataset.reactionType; // 'like' or 'dislike'
+        const idToken = await getCurrentUserToken(true); // Get a fresh token
+
+        // Temporarily disable buttons for visual feedback
+        likeBtn.disabled = true;
+        dislikeBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${BACKEND_URL}/react`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    postId: postId,
+                    type: reactionType
+                })
+            });
+
+            if (!response.ok) throw new Error("Reaction failed.");
+
+            // On success, re-fetch data to update counts and button state
+            await fetchPostDetail(); 
+
+        } catch (error) {
+            console.error("Failed to submit reaction:", error);
+        } finally {
+            // Re-enable buttons
+            likeBtn.disabled = false;
+            dislikeBtn.disabled = false;
+        }
+    }
+
     // --- Initial Load ---
-    fetchPostDetail();
+    document.addEventListener('DOMContentLoaded', () => {
+        if (likeBtn) likeBtn.addEventListener('click', handleReactionClick);
+        if (dislikeBtn) dislikeBtn.addEventListener('click', handleReactionClick);
+        
+        fetchPostDetail();
+    });
+
 </script>
-</body>
-</html>

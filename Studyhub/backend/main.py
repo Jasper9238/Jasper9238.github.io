@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from firebase_admin import auth 
-from notes import add_note, get_notes, get_note_by_id, get_comments_for_post, add_comment 
+from notes import add_note, get_notes, get_note_by_id, get_comments_for_post, add_comment , search_reactions, get_user_reaction_state, add_reaction
 from functools import wraps 
 from datetime import datetime, date # <--- ADDED IMPORTS
 import json
@@ -94,8 +94,9 @@ def api_get_note_detail(note_id):
     
     comments = get_comments_for_post(note_id)
     
-    note_data['comments'] = comments 
-    
+    note_data['comments'] = comments
+    reactz = search_reactions(note_id)
+    note_data['reactions'] = reactz
     return jsonify(note_data)
 
 # --- PROTECTED ROUTE: /add_comment ---
@@ -114,6 +115,30 @@ def api_add_comment(uid):
         author_id=uid
     )
     return jsonify({"message": "Comment added successfully"}), 201
+
+@app.route('/get_user_reaction/<post_id>')
+@protected_route
+def api_get_user_reactions(post_id,uid):
+    state = get_user_reaction_state(post_id,uid)
+    return jsonify({
+        'userReaction': state #like/dislike/null
+    })
+
+@app.route('/react', methods=['POST'])
+@protected_route
+def api_add_reaction(uid):
+    data = request.get_json()
+    required_fields = ['postId', 'type']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing field: {field}"}), 400
+
+    add_reaction(
+        post_id=data['postId'],
+        type=data['type'],
+        authorId=uid
+    )
+    return jsonify({"message": "Reacted successfully"}), 200
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
