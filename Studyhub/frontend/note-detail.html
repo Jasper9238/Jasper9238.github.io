@@ -46,22 +46,40 @@
             color: #777;
             margin-top: 5px;
             display: block;
-        }
-        #likeBtn, #dislikeBtn {
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            background-color: #f0f0f0;
-            cursor: pointer;
-            margin-right: 5px;
-            border-radius: 5px;
-            transition: background-color 0.2s;
-        }
-        
-        .active-reaction {
-            background-color: #007bff; /* Blue for active */
-            color: white;
-            border-color: #007bff;
-        }
+        }/* ... (existing styles) ... */
+
+/* Base style for the icon image itself */
+.reaction-icon {
+    width: 24px; /* Set a standard size */
+    height: 24px;
+    opacity: 0.6; /* Dim the default state */
+    transition: opacity 0.2s, filter 0.2s;
+}
+
+.reaction-icon-btn {
+    /* Ensure button itself has no background/border, like before */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px; /* Add padding for better click target */
+}
+
+/* 🚨 NEW: Active Coloring */
+
+/* When the like button is active, apply the green coloring */
+#likeBtn.active-like > .reaction-icon {
+    opacity: 1;
+    /* Use filter to change the color of the SVG/PNG */
+    /* Note: filter: hue-rotate is complex. For simple SVGs, the better method is often using CSS variables 
+       or simply swapping the image source in JS, but we'll use a strong filter here as a universal example: */
+    filter: invert(50%) sepia(80%) saturate(1000%) hue-rotate(80deg) brightness(90%); /* Example: Green filter */
+}
+
+/* When the dislike button is active, apply the red coloring */
+#dislikeBtn.active-dislike > .reaction-icon {
+    opacity: 1;
+    filter: invert(30%) sepia(90%) saturate(2000%) hue-rotate(330deg) brightness(90%); /* Example: Red filter */
+}
     </style>
 </head>
 <body>
@@ -74,13 +92,22 @@
 
     <div id="main-post-container" class="note" style="display:none;">
         </div>
-
-    <div id="reaction-counts">
-        <span id="like-count">0</span>
-        <span id="dislike-count">0</span>
+<div id="reaction-bar" style="margin-top: 15px; margin-bottom: 20px;">
+    <div class="reaction-group">
+        <button id="likeBtn" class="reaction-icon-btn" data-reaction-type="like">
+            <!--Based on render's hosting where frontend is the root-->
+            <img id="like-icon" src="/images/thumbs-up-neutral.png" alt="Like" class="reaction-icon">
+        </button>
+        <span id="like-count" class="reaction-count">0</span>
     </div>
-    <button id="likeBtn" data-reaction-type="like">👍 Like</button>
-    <button id="dislikeBtn" data-reaction-type="dislike">👎 Dislike</button>
+
+    <div class="reaction-group">
+        <button id="dislikeBtn" class="reaction-icon-btn" data-reaction-type="dislike">
+            <img id="dislike-icon" src="/images/thumbs-down-neutral.png" alt="Dislike" class="reaction-icon">
+        </button>
+        <span id="dislike-count" class="reaction-count">0</span>
+    </div>
+</div>
     <div id="reply-form-container" style="margin-top: 20px; display:none;">
         <h3>Leave a Comment</h3>
         <textarea id="replyContent" placeholder="Type your reply here..." rows="3" style="width: 100%; padding: 8px;"></textarea>
@@ -278,19 +305,21 @@
         if (likeCountEl) likeCountEl.textContent = counts.likeCount;
         if (dislikeCountEl) dislikeCountEl.textContent = counts.dislikeCount;
     }
-    
-    // 🚨 NEW: Function to toggle the button style
     function updateButtonStyles() {
+        const likeBtn = document.getElementById('likeBtn');
+        const dislikeBtn = document.getElementById('dislikeBtn');
+
         if (!likeBtn || !dislikeBtn) return;
 
-        // Reset all active classes first
-        likeBtn.classList.remove('active-reaction');
-        dislikeBtn.classList.remove('active-reaction');
+        // Reset all specific active classes first
+        likeBtn.classList.remove('active-like');
+        dislikeBtn.classList.remove('active-dislike');
 
+        // Apply the specific active class based on the state
         if (currentUserReaction === 'like') {
-            likeBtn.classList.add('active-reaction');
+            likeBtn.classList.add('active-like');
         } else if (currentUserReaction === 'dislike') {
-            dislikeBtn.classList.add('active-reaction');
+            dislikeBtn.classList.add('active-dislike');
         }
     }
 
