@@ -80,8 +80,8 @@
         </div>
     </section>
 
-    <section class="choose-grade">
-        <h2 id="notez">Find Notes</h2>
+    <section class="choose-grade" id="notez">
+        <h2>Find Notes</h2>
         
         <div class="selector">
             <label for="grade">Select Grade:</label>
@@ -112,11 +112,39 @@
 
         <button id="search">Search</button>
     </section>
-
-    <section id="post" class="post">
-        <p>You have to log in to post solutions.</p>
-    </section>
+    <section class="choose-quiz" id="quiz">
+    <h2>Take a Quiz</h2>
     
+    <div class="selector">
+        <label for="quiz-grade">Select Grade:</label>
+        <select id="quiz-grade">
+            <option value="">--Choose Grade--</option>
+            <option value="grade-1">Grade 1</option>
+            <option value="grade-2">Grade 2</option>
+            <option value="grade-3">Grade 3</option>
+            <option value="grade-4">Grade 4</option>
+            <option value="grade-5">Grade 5</option>
+            <option value="grade-6">Grade 6</option>
+            <option value="grade-7">Grade 7</option>
+            <option value="grade-8">Grade 8</option>
+            <option value="grade-9">Grade 9</option>
+        </select>
+    </div>
+    
+    <div class="selector">
+        <label for="quiz-subject">Select Subject:</label>
+        <select id="quiz-subject">
+            <option value="">--Choose Subject--</option>
+            <option value="science">Science</option>
+            <option value="socials">Socials</option>
+            <option value="math">Math</option>
+            <option value="english">English</option>
+        </select>
+    </div>
+
+    <button id="start-quiz-btn">Search Quizes</button>
+    
+</section>
     <section class="contact" id="submit">
         <div class="form-container" data-aos="fade-up">
             <h2>Contact<span> Me</span></h2>

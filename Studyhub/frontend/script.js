@@ -24,8 +24,7 @@ subscribeToAuthChanges((user) => {
         isFormVisible = false;
 
         // Show Sign Out button and update Post Section
-        signOutButton.style.display = 'inline-block';
-        postSection.innerHTML = `<p>You are logged in! Click <a href="/grade-9/science/index.html">here</a> to post your first note.</p>`; 
+        signOutButton.style.display = 'inline-block'; 
 
         // Remove the click listener that shows the form, if it exists
         navAuthButton.removeEventListener('click', toggleLoginForm);
@@ -119,6 +118,7 @@ if (arrow) {
 let search = document.getElementById('search');
 let grade = document.getElementById('grade');
 let subject = document.getElementById('subject');
+let startQuizBtn = document.getElementById('start-quiz-btn')
 
 if (search && grade && subject) {
     search.addEventListener('click', ()=>{
@@ -129,5 +129,24 @@ if (search && grade && subject) {
         } else {
              alert("Please select both a Grade and a Subject.");
         }
+    });
+}
+const quizGradeSelect = document.getElementById('quiz-grade')
+const quizSubjectSelect = document.getElementById('quiz-subject')
+
+if (startQuizBtn && grade && subject) {
+    startQuizBtn.addEventListener('click', () => {
+        const grade = quizGradeSelect.value;
+        const subject = quizSubjectSelect.value;
+
+        if (!grade || !subject) {
+            alert("Please select both a grade and a subject for the quiz.");
+            return;
+        }
+
+        // 🚨 NEW REDIRECTION LOGIC:
+        // Redirect user to a subpage dedicated to listing quizzes.
+        // You will need to create pages like: /grade-9/science/quizzes.html
+        window.location.href = `/${grade}/${subject}/quizzes.html`;
     });
 }
