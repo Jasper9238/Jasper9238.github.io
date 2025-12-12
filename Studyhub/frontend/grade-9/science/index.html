@@ -197,8 +197,6 @@
 
     <script type="module">
         
-        // This import uses the CORRECT RELATIVE path to access the module 
-        // two levels up (../../) and then into the js folder.
         import { 
             signIn, 
             signUp, 
@@ -272,7 +270,7 @@
 
         // --- C. NOTE POSTING LOGIC (UPDATED WITH TOKEN!) ---
 
-        postNoteBtn.addEventListener("click", () => {
+    postNoteBtn.addEventListener("click", () => {
         if (currentUser) {
             modal.style.display = "flex"; 
         } else {
@@ -364,6 +362,7 @@ async function fetchNotes() {
                         badgeStyle = 'background-color: #28a745; color: white;';
                         break;
                     case 'note':
+                        badgeStyle = 'background-color: #007bff; color: white;';
                     default:
                         badgeStyle = 'background-color: #007bff; color: white;';
                 }

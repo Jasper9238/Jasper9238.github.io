@@ -3,7 +3,7 @@ from flask_cors import CORS
 from firebase_admin import auth 
 from notes import add_note, get_notes, get_note_by_id, get_comments_for_post, add_comment , search_reactions, get_user_reaction_state, add_reaction
 from functools import wraps 
-from datetime import datetime, date # <--- ADDED IMPORTS
+from datetime import datetime, date 
 import json
 
 # --- PROTECTED ROUTE DECORATOR (unchanged) ---
@@ -27,12 +27,11 @@ def protected_route(f):
             return jsonify({'message':'Invalid or expired token.'}), 403
     return decorated_function
 
-# --- FLASK APP INITIALIZATION & CUSTOM ENCODER ---
+
 app = Flask(__name__)
 CORS(app)
 
-# 🚨 THIS CLASS FIXES THE 500 ERROR 🚨
-# It tells Flask: "If you see a Date object, turn it into a string. Don't crash."
+
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, (date, datetime)):

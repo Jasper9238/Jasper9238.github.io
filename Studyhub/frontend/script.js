@@ -8,14 +8,17 @@ const signOutButton = document.getElementById('sign-out-btn-main'); // The sign-
 const loginForm = document.getElementById('login-form-main'); // The hidden login form (for email/password input)
 const emailInput = document.getElementById('auth-email-main');
 const passwordInput = document.getElementById('auth-password-main');
-const postSection = document.getElementById('post'); // The section that shows posting status
 
-let isFormVisible = false; // State variable to manage the hidden login form visibility
+
+let isFormVisible = false; 
 
 // --- AUTHENTICATION STATE HANDLER (Runs on load and on state change) ---
 subscribeToAuthChanges((user) => {
+        navAuthButton.removeEventListener('click', toggleLoginForm);
     if (user) {
         // USER IS LOGGED IN
+        navAuthButton.removeEventListener('click', toggleLoginForm);
+        navAuthButton.hidden = true
         navAuthButton.textContent = `Welcome, ${user.email.split('@')[0]}`; // Show truncated email
         navAuthButton.style.cursor = 'default';
         
@@ -26,19 +29,19 @@ subscribeToAuthChanges((user) => {
         // Show Sign Out button and update Post Section
         signOutButton.style.display = 'inline-block'; 
 
-        // Remove the click listener that shows the form, if it exists
-        navAuthButton.removeEventListener('click', toggleLoginForm);
+        navAuthButton.addEventListener('click', () => {
+             if (isFormVisible) toggleLoginForm();
+        });
         
     } else {
         // USER IS LOGGED OUT
+        navAuthButton.hidden = false
         navAuthButton.textContent = 'Log In / Sign Up';
         navAuthButton.style.cursor = 'pointer';
         
         // Hide Sign Out button
         signOutButton.style.display = 'none';
-        
-        // Reset Post Section
-        postSection.innerHTML = `<p>You have to log in to post solutions.</p>`;
+
 
         // Add the click listener to show the form
         navAuthButton.addEventListener('click', toggleLoginForm);
@@ -115,10 +118,13 @@ if (arrow) {
 }
 
 
-let search = document.getElementById('search');
-let grade = document.getElementById('grade');
-let subject = document.getElementById('subject');
-let startQuizBtn = document.getElementById('start-quiz-btn')
+const search = document.getElementById('search');
+const grade = document.getElementById('grade');
+const subject = document.getElementById('subject');
+
+const startQuizBtn = document.getElementById('start-quiz-btn');
+const quizGradeSelect = document.getElementById('quiz-grade');
+const quizSubjectSelect = document.getElementById('quiz-subject');
 
 if (search && grade && subject) {
     search.addEventListener('click', ()=>{
@@ -131,22 +137,17 @@ if (search && grade && subject) {
         }
     });
 }
-const quizGradeSelect = document.getElementById('quiz-grade')
-const quizSubjectSelect = document.getElementById('quiz-subject')
 
-if (startQuizBtn && grade && subject) {
+if (startQuizBtn && quizGradeSelect && quizSubjectSelect) {
     startQuizBtn.addEventListener('click', () => {
-        const grade = quizGradeSelect.value;
-        const subject = quizSubjectSelect.value;
+        const grade2 = quizGradeSelect.value;
+        const subject2 = quizSubjectSelect.value;
 
-        if (!grade || !subject) {
+        if (!grade2 || !subject2) {
             alert("Please select both a grade and a subject for the quiz.");
             return;
         }
 
-        // 🚨 NEW REDIRECTION LOGIC:
-        // Redirect user to a subpage dedicated to listing quizzes.
-        // You will need to create pages like: /grade-9/science/quizzes.html
-        window.location.href = `/${grade}/${subject}/quizzes.html`;
+        window.location.href = `/${grade2}/${subject2}/quizzes.html`;
     });
 }

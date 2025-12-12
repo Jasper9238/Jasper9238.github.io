@@ -2,7 +2,7 @@ from firebase_setup import db
 from datetime import datetime
 from google.cloud import firestore
 
-# --- HELPER FUNCTION: Safely Convert Date to String ---
+# --- HELPER FUNCTION: Convert Date to String ---
 def serialize_date(data):
     """Checks if data has dateCreated and converts it to a string."""
     if 'dateCreated' in data:
@@ -32,7 +32,7 @@ def add_note(grade, subject, title, content, author, category):
     db.collection('notes').add(note_data)
     print("Note added")
 
-# --- LIST/INDEX FUNCTION ---
+
 def get_notes(grade, subject):
     notes_ref = db.collection('notes')
     query = notes_ref.where("grade", "==", grade).where("subject", "==", subject).order_by("dateCreated", direction=firestore.Query.DESCENDING)
@@ -43,7 +43,6 @@ def get_notes(grade, subject):
         data = note.to_dict()
         data['id'] = note.id
         
-        # 🚨 FIX: Convert date to string immediately
         serialize_date(data)
         
         notes_list.append(data)
@@ -74,13 +73,13 @@ def get_comments_for_post(post_id):
         data = comment.to_dict()
         data['id'] = comment.id
         
-        # 🚨 FIX: Convert date to string immediately
+        
         serialize_date(data)
         
         comments_list.append(data)
     return comments_list
 
-# --- COMMENT ADD FUNCTION ---
+
 def add_comment(post_id, content, author_id):
     comment_data = {
         "postId": post_id,
