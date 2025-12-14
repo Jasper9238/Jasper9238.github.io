@@ -28,7 +28,7 @@
             margin-bottom: 10px;
             display: block;
         }
-        #note-preview-text {
+        .note-preview-text {
 
             max-height: 6em;      
             line-height: 1.5em;   
@@ -392,25 +392,25 @@ async function fetchNotes() {
                 
                 // --- FULL, STYLED STRUCTURE WITH LINK ---
                 div.innerHTML = `
-                    
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;" id='note-preview-text'>
-                        <div class="note-title" style="margin: 0;">${noteTitleHTML}</div>
-                        <span class="note-type-badge" style="
-                            ${badgeStyle}
-                            font-size: 0.8em;
-                            padding: 3px 8px;
-                            border-radius: 12px;
-                            font-weight: bold;
-                            white-space: nowrap;
-                            margin-left: 10px;
-                        ">${categoryText.toUpperCase()}</span> 
-                    </div>
-                  <div class="note-author">By: ${authorDisplay}</div>
-    
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                    <div class="note-title" style="margin: 0;">${noteTitleHTML}</div>
+                    <span class="note-type-badge" style="
+                        ${badgeStyle}
+                        font-size: 0.8em;
+                        padding: 3px 8px;
+                        border-radius: 12px;
+                        font-weight: bold;
+                        white-space: nowrap;
+                        margin-left: 10px;
+                    ">${categoryText.toUpperCase()}</span> 
+                </div>
+
+                <div class="note-author">By: ${authorDisplay}</div>
+
                 <div class="note-preview-text">${note.content}</div>
                 
                 <div style="margin-top: 8px;">
-                    <a href="../../../note-detail.html?id=${note.id}" style="text-decoration: none; color: #6eb9f5; font-weight: bold; font-size: 0.9em;">Read More...</a>
+                    <a href="../../../note-detail.html?id=${note.id}" style="text-decoration: none; color: #2196F3; font-weight: bold; font-size: 0.9em;">Read More...</a>
                 </div>
             `;
                 notesContainer.appendChild(div);
