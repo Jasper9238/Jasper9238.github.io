@@ -198,7 +198,10 @@
     </div>
 
     <hr>
-
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="searchInput" placeholder="Search by title or content..." 
+               style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 16px; box-sizing: border-box;">
+    </div>
     <h2>Community Questions & Notes</h2>
     <div id="notes-container">Loading posts...</div>
 
@@ -346,82 +349,93 @@
             alert(`Failed to post: ${errorResult.message || res.statusText}`);
         }
     });
+    // --- GLOBAL VARIABLES ---
+    let allNotes = []; // Store all notes here so we can filter them later
 
-async function fetchNotes() { 
+    // --- ELEMENTS ---
+    const searchInput = document.getElementById('searchInput');
+
+    // --- SEARCH LISTENER ---
+    // This runs every time the user types a letter
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        filterAndRenderNotes(searchTerm);
+    });
+
+    // --- FETCH FUNCTION ---
+    async function fetchNotes() { 
         const url = `https://studyhub-backend-iy1e.onrender.com/get_notes?grade=${GRADE}&subject=${SUBJECT}`;
         
         try {
             const response = await fetch(url);
-            const notes = await response.json();
+            // Save the data to our global variable
+            allNotes = await response.json();
 
-            notesContainer.innerHTML = '';
-
-            if (!Array.isArray(notes) || notes.length === 0) {
-                notesContainer.innerHTML = '<p>No posts found yet. Be the first to post!</p>';
-                return;
-            }
-
-            notes.forEach(note => {
-                const categoryText = note.category || 'Note';
-                let badgeStyle = '';
-                
-                switch (categoryText.toLowerCase()) {
-                    // ... (Case logic for badgeStyle as before) ...
-                    case 'question':
-                        badgeStyle = 'background-color: #ffc107; color: #343a40;';
-                        break;
-                    case 'solution':
-                        badgeStyle = 'background-color: #28a745; color: white;';
-                        break;
-                    case 'note':
-                        badgeStyle = 'background-color: #007bff; color: white;';
-                    default:
-                        badgeStyle = 'background-color: #007bff; color: white;';
-                }
-                
-                const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
-                
-                const noteTitleHTML = `
-                    <a href="../../../note-detail.html?id=${note.id}" 
-                       style="text-decoration: none; color: inherit;">
-                        ${note.title}
-                    </a>`;
-                
-                const div = document.createElement('div');
-                div.className = 'note';
-                
-                // --- FULL, STYLED STRUCTURE WITH LINK ---
-                div.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
-                    <div class="note-title" style="margin: 0;">${noteTitleHTML}</div>
-                    <span class="note-type-badge" style="
-                        ${badgeStyle}
-                        font-size: 0.8em;
-                        padding: 3px 8px;
-                        border-radius: 12px;
-                        font-weight: bold;
-                        white-space: nowrap;
-                        margin-left: 10px;
-                    ">${categoryText.toUpperCase()}</span> 
-                </div>
-
-                <div class="note-author">By: ${authorDisplay}</div>
-
-                <div class="note-preview-text">${note.content}</div>
-                
-                <div style="margin-top: 8px;">
-                    <a href="../../../note-detail.html?id=${note.id}" style="text-decoration: none; color: #2196F3; font-weight: bold; font-size: 0.9em;">Read More...</a>
-                </div>
-            `;
-                notesContainer.appendChild(div);
-            });
+            // Render EVERYTHING initially (empty search term)
+            filterAndRenderNotes(""); 
+            
         } catch (error) {
             console.error("Error fetching posts:", error);
             notesContainer.innerHTML = '<p>Error fetching posts.</p>';
         }
     }
 
-        fetchNotes(); // Initial load
+    // --- FILTER & RENDER FUNCTION ---
+    function filterAndRenderNotes(searchTerm) {
+        notesContainer.innerHTML = '';
+
+        // 1. Filter the notes based on the search term
+        const filteredNotes = allNotes.filter(note => {
+            const titleMatch = note.title.toLowerCase().includes(searchTerm);
+            const contentMatch = note.content.toLowerCase().includes(searchTerm);
+            return titleMatch || contentMatch;
+        });
+
+        // 2. Handle empty results
+        if (filteredNotes.length === 0) {
+            notesContainer.innerHTML = '<p>No posts found matching your search. Try searching it with different wording?</p>';
+            return;
+        }
+
+        // 3. Render the filtered list
+        filteredNotes.forEach(note => {
+            const categoryText = note.category || 'Note';
+            let badgeStyle = '';
+            
+            switch (categoryText.toLowerCase()) {
+                case 'question': badgeStyle = 'background-color: #ffc107; color: #343a40;'; break;
+                case 'solution': badgeStyle = 'background-color: #28a745; color: white;'; break;
+                default: badgeStyle = 'background-color: #007bff; color: white;';
+            }
+            
+            const authorDisplay = note.authorId ? `User ID: ${note.authorId.substring(0, 6)}...` : 'Unknown';
+
+            const div = document.createElement('div');
+            div.className = 'note';
+            
+            // Your EXACT HTML structure from before
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                    <div class="note-title" style="margin: 0;">
+                         <a href="../../../note-detail.html?id=${note.id}" style="text-decoration: none; color: inherit;">
+                            ${note.title}
+                        </a>
+                    </div>
+                    <span class="note-type-badge" style="${badgeStyle} font-size: 0.8em; padding: 3px 8px; border-radius: 12px; font-weight: bold; white-space: nowrap; margin-left: 10px;">
+                        ${categoryText.toUpperCase()}
+                    </span> 
+                </div>
+                <div class="note-author">By: ${authorDisplay}</div>
+                <div class="note-preview-text">${note.content}</div> <div style="margin-top: 8px;">
+                    <a href="../../../note-detail.html?id=${note.id}" style="text-decoration: none; color: #2196F3; font-weight: bold; font-size: 0.9em;">Read More...</a>
+                </div>
+            `;
+            notesContainer.appendChild(div);
+        });
+    }
+
+    // Start the process
+    fetchNotes();
     </script>
 </body>
 </html>

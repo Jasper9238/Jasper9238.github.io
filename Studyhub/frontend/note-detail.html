@@ -33,6 +33,29 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        .note-content {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #444;
+            
+            /* This forces long words to break */
+            overflow-wrap: break-word; 
+            word-wrap: break-word; 
+            word-break: break-word; 
+
+            /* This preserves the user's "Enter" key line breaks */
+            white-space: pre-wrap; 
+        }
+
+        .comment-box p {
+            margin: 0 0 5px 0;
+            
+            /* Same wrapping logic for comments */
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-word;
+            white-space: pre-wrap; 
+        }
         
         /* Style for Comments */
         .comment-box { 
@@ -125,7 +148,7 @@
 
     <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js"></script>
     <script type="module" src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js"></script>
-    <script type="module" src="/js/firebaseAuth.js"></script> 
+        <script type="module" src="/js/firebaseAuth.js"></script> 
     
     <script type="module">
     import { 
@@ -233,10 +256,6 @@
         }
     }
 
-    function convertNewLinesToBr(text){
-        if (typeof text != 'string') return '';
-        return text.replace(/\n/g,'<br>')
-    }
     // ---  RENDERING FUNCTIONS  ---
     function renderMainPost(note) {
         
@@ -253,7 +272,6 @@
 
         //  Simple string conversion
         const dateString = note.dateCreated ? new Date(note.dateCreated).toLocaleDateString() : 'Date Unknown';
-        const txt = convertNewLinesToBr(note.content)
         mainPostContainer.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
                 <div class="note-title" style="margin: 0; color: #333;">${note.title}</div>
@@ -262,7 +280,7 @@
                 </span> 
             </div>
             <div class="note-author" style="margin-bottom: 10px;">By: ${authorDisplay}</div>
-            <div class="note-content">${txt}</div>
+            <div class="note-content">${note.content}</div>
             <hr style="border-top: 1px solid #ddd; margin-top: 15px;">
             <small style="color:#999;">Posted: ${dateString}</small>
         `;
@@ -294,7 +312,7 @@
             }
 
             div.innerHTML = `
-                <p style="margin-bottom: 5px;">${convertNewLinesToBr(comment.content)}</p>
+                <p style="margin-bottom: 5px;">${comment.content}</p>
                 <span class="comment-author">
                     By ${commentAuthor} (${dateDisplay})
                 </span>
