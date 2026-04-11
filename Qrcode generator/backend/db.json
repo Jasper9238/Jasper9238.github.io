@@ -1,0 +1,17 @@
+{
+    "users": {
+        "jasperhung888@gmail.com": {
+            "password": "peakpeakpeak",
+            "qrs": [
+                {
+                    "token": "z8305ou",
+                    "target": "https://jasperthepark.github.io/pacman/"
+                }
+            ]
+        },
+        "jasperhung889@gmail.com": {
+            "password": "abc123imsofree",
+            "qrs": []
+        }
+    }
+}
