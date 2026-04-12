@@ -1,4 +1,4 @@
-const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev/"; 
+const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev"; 
 const PYTHON_URL = "https://qrcoderbackend-gamma.vercel.app/api";
 const user = localStorage.getItem('currentUser');
 
