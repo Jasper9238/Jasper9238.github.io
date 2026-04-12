@@ -24,8 +24,16 @@ export default {
     // --- 1. THE REDIRECTION PATH (High Speed) ---
     const redirectToken = path.slice(1);
     if (redirectToken && !redirectToken.includes('/') && request.method === "GET" && !path.startsWith("/api") && !path.startsWith("/v1")) {
-      const targetUrl = await env.REDIRECT_KV.get(redirectToken);
+      let targetUrl = await env.REDIRECT_KV.get(redirectToken);
       if (targetUrl) {
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+            targetUrl = `https://${targetUrl}`;
+        }
+        for(let i = 0;i<targetUrl.length;i++){
+          if(targetUrl[i]==' '){
+            targetUrl = targetUrl.slice(0,i)+'%20'+targetUrl.slice(i+1,targetUrl.length)
+          }
+        }
         // Log scan asynchronously
         ctx.waitUntil((async () => {
           const statsKey = `stats:${redirectToken}`;

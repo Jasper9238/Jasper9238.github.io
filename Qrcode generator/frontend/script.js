@@ -20,7 +20,7 @@ async function auth(type) {
 
         if (response.ok) {
             alert(type === 'login' ? "Welcome back!" : "Account created!");
-            localStorage.setItem('currentUser', username);
+            localStorage.setItem('currentUser', data.username);
             window.location.href = "dashboard.html";
         } else {
             alert("Error: " + data.error);
@@ -30,3 +30,4 @@ async function auth(type) {
         alert("Could not connect to the Python backend. Is it running?");
     }
 }
+

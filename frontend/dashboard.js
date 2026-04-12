@@ -44,24 +44,26 @@ async function loadMyQRs() {
     const PYTHON_URL = "http://127.0.0.1:5000/api";
     const WORKER_URL = "http://127.0.0.1:8787"; 
 
-    const res = await fetch(`${PYTHON_URL}/get-history?username=${user}`);
+    // Match the route name we created in Python: /my-qrs
+    const res = await fetch(`${PYTHON_URL}/my-qrs?username=${user}`);
     const data = await res.json();
 
     const grid = document.getElementById('qr-grid');
     grid.innerHTML = ''; 
 
-    data.qrs.forEach(qr => {
-        console.log('debug')
-        const fullLink = `${WORKER_URL}/${qr.token}`;
-        grid.innerHTML += `
-            <div class="qr-card">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?data=${fullLink}&size=150x150" alt="QR Code">
-                <p><strong>Token:</strong> ${qr.token}</p>
-                <p><strong>Target:</strong> ${qr.target}</p>
-                <a href="${fullLink}" target="_blank">Test Link</a>
-            </div>
-        `;
-    });
+    if (data.success) {
+        data.qrs.forEach(qr => {
+            const fullLink = `${WORKER_URL}/${qr.token}`;
+            grid.innerHTML += `
+                <div class="qr-card">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(fullLink)}&size=150x150" alt="QR Code">
+                    <p><strong>Token:</strong> ${qr.token}</p>
+                    <p><strong>Target:</strong> ${qr.target_url}</p> <p><strong>Clicks:</strong> ${qr.clicks}</p>
+                    <a href="${fullLink}" target="_blank">Test Link</a>
+                </div>
+            `;
+        });
+    }
 }
 
 // Call this when the page opens
