@@ -8,7 +8,7 @@ if (!user) {
 
 async function generateQR() {
     const targetUrl = document.getElementById('targetUrl').value;
-    const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev/"; 
+    const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev"; 
     const PYTHON_URL = "https://qrcoderbackend-gamma.vercel.app/api";
 
   
@@ -42,7 +42,7 @@ function logout() {
 async function loadMyQRs() {
     const user = localStorage.getItem('currentUser');
     const PYTHON_URL = "https://qrcoderbackend-gamma.vercel.app/api";
-    const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev/"; 
+    const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev"; 
 
     // Match the route name we created in Python: /my-qrs
     const res = await fetch(`${PYTHON_URL}/my-qrs?username=${user}`);
