@@ -1,0 +1,23 @@
+{
+  "name": "qr-generator-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-03-30",
+  "observability": {
+    "enabled": true
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "REDIRECT_KV",
+      "id": "89b473521e5f43938029de82ec21234e"
+    }
+  ]
+  /*
+  "r2_buckets": [
+    {
+      "binding": "QR_IMAGES",
+      "bucket_name": "qr-code-blobs"
+    }
+  ]
+    */
+}

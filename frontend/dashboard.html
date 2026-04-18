@@ -12,7 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Press+Start+2P&family=Tiny5&display=swap" rel="stylesheet">
-
+    <link rel="preconnect" href="https://qr-generator-backend.jasperhung887.workers.dev">
+    <link rel="dns-prefetch" href="https://qr-generator-backend.jasperhung887.workers.dev">
 </head>
 <body>
     <nav>
@@ -24,13 +25,16 @@
         <div class="create-box" style="background: white; padding: 20px; border-radius: 10px;">
             <h3 style="font-family: 'Press Start 2P', system-ui;">Create a Dynamic QR</h3>
             <input type="url" id="targetUrl" required placeholder="https://example.com" style="width: 60%;">
-            <button onclick="generateQR()" style="font-family: 'Press Start 2P', system-ui; font-size: 10px;">Generate</button>
+            <button onclick="generateQR()" style="font-family: 'Press Start 2P', system-ui; font-size: 10px;" id="generate-btn">Generate</button>
         </div>
 
         <hr style="margin: 30px 0;">
         <h2>Your Codes</h2>
         <div id="qr-grid" class="grid">
-            </div>
+            <div id="qr-result" style="min-height: 150px;"></div> 
+            <button id="download-btn" style="display: none;">Download QR Code</button>
+        </div>
+        
     </div>
 
     <script src="dashboard.js"></script>

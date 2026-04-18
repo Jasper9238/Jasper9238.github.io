@@ -41,10 +41,6 @@ function logout() {
 }
 async function loadMyQRs() {
     const user = localStorage.getItem('currentUser');
-    const PYTHON_URL = "https://qrcoderbackend-gamma.vercel.app/api";
-    const WORKER_URL = "https://qr-generator-backend.jasperhung887.workers.dev"; 
-
-    // Match the route name we created in Python: /my-qrs
     const res = await fetch(`${PYTHON_URL}/my-qrs?username=${user}`);
     const data = await res.json();
 
@@ -52,19 +48,54 @@ async function loadMyQRs() {
     grid.innerHTML = ''; 
 
     if (data.success) {
+        // High-efficiency tip: build one big string instead of many innerHTML += calls
+        let htmlContent = '';
+        
         data.qrs.forEach(qr => {
             const fullLink = `${WORKER_URL}/${qr.token}`;
-            grid.innerHTML += `
+            const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(fullLink)}&size=300x300`;
+            
+            htmlContent += `
                 <div class="qr-card">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(fullLink)}&size=150x150" alt="QR Code">
+                    <img src="${qrImageUrl.replace('size=300x300', 'size=150x150')}" alt="QR Code">
                     <p><strong>Token:</strong> ${qr.token}</p>
-                    <p><strong>Target:</strong> ${qr.target_url}</p> <p><strong>Clicks:</strong> ${qr.clicks}</p>
-                    <a href="${fullLink}" target="_blank">Test Link</a>
+                    <p><strong>Clicks:</strong> ${qr.clicks}</p>
+                    <div class="card-actions">
+                        <a href="${fullLink}" target="_blank" class="btn-test">Test</a>
+                        <button onclick="downloadQR('${qrImageUrl}', 'qr-${qr.token}.png')" class="btn-download">
+                            Download
+                        </button>
+                    </div>
                 </div>
             `;
         });
+        grid.innerHTML = htmlContent;
     }
 }
-
+async function downloadQR(url, filename) {
+    try {
+        // 1. Fetch the image data
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        // 2. Create a temporary 'virtual' link
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        
+        link.href = blobUrl;
+        link.download = filename;
+        
+        // 3. Programmatically click it to trigger download
+        document.body.appendChild(link);
+        link.click();
+        
+        // 4. Cleanup
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error("Download failed:", error);
+        alert("Failed to download image. Check your internet connection.");
+    }
+}
 // Call this when the page opens
 loadMyQRs();
