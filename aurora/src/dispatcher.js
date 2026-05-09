@@ -1,0 +1,1 @@
+//Logic: Polls USGS and checks Redis
