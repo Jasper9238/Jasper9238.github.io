@@ -5,7 +5,6 @@ self.addEventListener('push', (event) => {
         body: event.data ? event.data.text() : 'No payload',
         icon: 'icon.png', // path to an icon if you have one
     };
-
     event.waitUntil(
         self.registration.showNotification('Push Message', options)
     );
