@@ -4,6 +4,7 @@ allownotfi.onclick = async function(){
     if(Notification.permission=='granted'){
         console.log('permission has already been granted')
         new Notification('Notifications have already been granted')
+        registerServiceWorker()
         return
     }else{
         if(!("Notification" in window)){
@@ -13,8 +14,8 @@ allownotfi.onclick = async function(){
             Notification.requestPermission().then((permission)=>{
                 if(permission=='granted'){
                     console.log('access grnated!')
-                    var a = new Notification("Notifications have been enabled",{body:"test notification"})
-                    console.log()
+                    new Notification("Notifications have been enabled",{body:"test notification"})
+                    registerServiceWorker()
                 }else{
                     console.log('acess denied ?')
                 }
@@ -32,7 +33,8 @@ const registerServiceWorker = async () => {
                 userVisibleOnly:true,
                 applicationServerKey: 'BEtt61aFqCxky6cgDyTKsU9RCZKV040JkcQhhUWjwa3fYYGPvxplAFpZwiW-CYqosJjZlL_xJzE8Ucz7FXFnMi8'
             })
-            await fetch('https://localhost:3000/subscribe',{
+            await fetch('http://localhost:3000/subscribe',{
+                method:'POST',
                 body: JSON.stringify(subscription),
                 headers:{
                     'Content-Type': 'application/json'

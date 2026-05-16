@@ -19,7 +19,7 @@ self.addEventListener('push',(event)=>{
 
 	}
 	event.waitUntil(
-		self.registration.showNotificatio(payload.title,options)
+		self.registration.showNotification(payload.title,options)
 	)
 	
 })
