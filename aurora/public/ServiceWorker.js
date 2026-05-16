@@ -1,11 +1,25 @@
-//THE SERVICE WORKER: Handles the "Push" event
-// ServiceWorker.js
-self.addEventListener('push', (event) => {
-    const options = {
-        body: event.data ? event.data.text() : 'No payload',
-        icon: 'icon.png', // path to an icon if you have one
-    };
-    event.waitUntil(
-        self.registration.showNotification('Push Message', options)
-    );
-});
+
+self.addEventListener('push',(event)=>{
+	let payload = {title:'Earthquake Alert!', body:'Shaking Detected'};
+	if(event.data){
+		try{
+			payload = event.data.json()
+		}
+		catch(err){
+			payload.body = event.data.text()
+		}
+	}
+	const options = {
+		body:payload.body,
+		icon: './icon.png',
+		vibrate: [300,100,300],
+		data:{
+			dateOfArrival: Date.now()
+		}
+
+	}
+	event.waitUntil(
+		self.registration.showNotificatio(payload.title,options)
+	)
+	
+})
