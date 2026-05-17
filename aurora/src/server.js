@@ -7,7 +7,7 @@ const cors = require('cors')
 
 const app = express()
 app.use(bodyParser.json())
-app.use(cors({origin:'jasper9238.github.io/aurora/public'}))
+app.use(cors({origin:'https://jasper9238.github.io'}))
 const publicKey = 'BEtt61aFqCxky6cgDyTKsU9RCZKV040JkcQhhUWjwa3fYYGPvxplAFpZwiW-CYqosJjZlL_xJzE8Ucz7FXFnMi8'
 const privateKey = '77V7Oz9ZvKDJhqDXeT8jVTauC0HqSI9gEE9hj_21rIg'
 
@@ -64,7 +64,3 @@ async function checkQuake(){
 setInterval(() => {
     checkQuake()
 }, 3000);
-
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
-});
