@@ -34,7 +34,7 @@ const registerServiceWorker = async () => {
                 userVisibleOnly:true,
                 applicationServerKey: 'BEtt61aFqCxky6cgDyTKsU9RCZKV040JkcQhhUWjwa3fYYGPvxplAFpZwiW-CYqosJjZlL_xJzE8Ucz7FXFnMi8'
             })
-            await fetch('http://localhost:3000/subscribe',{
+            await fetch('https://earthquakeserver.onrender.com/subscribe',{
                 method:'POST',
                 body: JSON.stringify(subscription),
                 headers:{
